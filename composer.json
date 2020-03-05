@@ -1,0 +1,19 @@
+{
+    "name": "elfstack/slim-module",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Tamce",
+            "email": "tamce@outlook.com"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "slim/slim": "^3.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "ElfStack\\SlimModule\\": "./src"
+        }
+    }
+}
