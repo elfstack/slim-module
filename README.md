@@ -13,7 +13,7 @@ $app = new \Slim\App();
 $container = $app->getContainer();
 
 $manager = new \ElfStack\SlimModule\Manager($config);
-$container['module.manager'] = function () use ($manager) {
+$container['module'] = function () use ($manager) {
     return $manager;
 };
 
@@ -37,26 +37,21 @@ $manager->register([
     'Auth',                         // 搜寻 (module_prefix)\Auth\Meta.php
     'authenticate' => 'Auth',       // 使用 `authenticate` 覆盖 Meta 中提供的默认模块短名称
     App\Modules\Auth\Meta::class,   // 完整指定实现 ModuleMetaInterface 的类
-    MetaInfo::create('auth', $routes, $services),   // 直接传递 MetaInfo 对象
+    new MetaInfo('auth', $metainfo),   // 直接传递 MetaInfo 对象
 ]);
 ```
 
-其中关于 routes、services、ModuleMetaInterface 的格式见下
 ```php
-$routes = [
+$metainfo = [
     'namespace' => 'App\Modules\Auth',  // optional, default ''
     'api_prefix' => '',                 // optional, default ''
-    'apis' => [
+    'apis' => [                         // optional, default []
         'GET /users' => 'Controller:list',                  // recommended
         'GET /users' => 'App\Modules\Auth\Controller:list', // full namespace works even with `namespace` set
         'GET /users' => Controller::class.':list',          // slim style
-    ];
-];
-
-$services = [
-    'namespace' => 'App\Modules\Auth',
-    'services' => [
-        'getAllUser' => 'Service:getAllUser',
+    ],
+    'services' => [                     // optional, default []
+        'getAllUser' => 'Service:getAllUser',               // handler has the same style to routes
     ];
 ];
 ```
@@ -74,15 +69,13 @@ Modules:
 // Meta.php
 namespace App\Modules\Auth;
 use ElfStack\SlimModules\Interfaces\ModuleMetaInterface;
-use ElfStack\SlimModules\Factory\MetaInfo;
 
 class Meta implements ModuleMetaInterface
 {
-    public function register()
+    static public function info()
     {
-        $routes = ...;
-        $services = ...;
-        return MetaInfo::create('auth', $routes, $services);
+        $metainfo = ...;
+        return new MetaInfo('auth', $metainfo);
     }
 }
 ```
