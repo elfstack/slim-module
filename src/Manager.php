@@ -34,11 +34,14 @@ class Manager
         if ($module instanceof MetaInfo) {
             return $module;
         }
+        // FIXME: assumed string
+        $from = $module;
         $tries = [$this->prefix.$module.'\Meta', $module.'\Meta', $module];
         foreach ($tries as $try) {
             if (class_exists($try)) {
                 // FIXME: check interface
                 $module = $try::info();
+                $module->setTraceInfo($from);
                 break;
             }
         }
@@ -101,7 +104,7 @@ class Manager
     {
         $result = '';
         foreach ($this->registered as $key => $module) {
-            $result .= "$key:\n\troutes:\n";
+            $result .= "$key: ".$module->getTraceInfo()."\n\troutes:\n";
             foreach ($module->getRoutes() as $route => $handler) {
                 $result .= "\t\t$route\n";
             }
