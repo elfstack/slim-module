@@ -1,6 +1,8 @@
 <?php
 namespace ElfStack\SlimModule;
 
+use App\Modules\Auth\Meta;
+
 class Manager
 {
     protected \Slim\App $app;
@@ -95,9 +97,19 @@ class Manager
         return $this->services[$service](...$args);
     }
 
-    public function debug()
+    public function collect()
     {
-        unset($this->app);
-        return $this;
+        $result = '';
+        foreach ($this->registered as $key => $module) {
+            $result .= "$key:\n\troutes:\n";
+            foreach ($module->getRoutes() as $route => $handler) {
+                $result .= "\t\t$route\n";
+            }
+            $result .= "\tservices:\n";
+            foreach ($module->getServices() as $service => $handler) {
+                $result .= "\t\t$key.$service\n";
+            }
+        }
+        return $result;
     }
 }
