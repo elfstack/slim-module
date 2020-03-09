@@ -10,6 +10,7 @@ class Manager
     protected $prefix = '';
     protected $registered = [];
     protected $services = [];
+    protected $strictCall = true;
 
     public function __construct(\Slim\App $app, array $config)
     {
@@ -29,6 +30,12 @@ class Manager
         }
     }
 
+    /**
+     * 解析输入参数到 MetaInfo
+     *
+     * @param mixed $module
+     * @return MetaInfo
+     */
     protected function resolveModule($module)
     {
         if ($module instanceof MetaInfo) {
@@ -73,7 +80,7 @@ class Manager
             $route = explode(' ', $route, 2);
             // TODO validate $route
             // TODO supports multiple routes on single handler
-            $this->app->map([$route[0]], $api_prefix.$route[1], $this->resolveHandler($module, $handler));
+            $this->app->map(explode(',', $route[0]), $api_prefix.$route[1], $this->resolveHandler($module, $handler));
         }
     }
 
@@ -95,8 +102,43 @@ class Manager
         }
     }
 
+    public function setStrictCall(bool $strict = true)
+    {
+        $this->strictCall = $strict;
+        return $this;
+    }
+
+    public function getStrictCall()
+    {
+        return $this->strictCall;
+    }
+
+    public function noExceptionCall($service, ...$args)
+    {
+        $origin = $this->getStrictCall();
+        $result = $this->setStrictCall(false)->call($service, ...$args);
+        $this->setStrictCall($origin);
+        return $result;
+    }
+
     public function call($service, ...$args)
     {
+        [$name, $foo] = explode('.', $service, 2);
+        if ($name == '*') {
+            $result = [];
+            foreach (array_keys($this->registered) as $module) {
+                $result[] = $this->call("$module.$foo", ...$args);
+            }
+            return $result;
+        }
+
+
+        if (!isset($this->services[$service])) {
+            if ($this->getStrictCall())
+                throw new \RuntimeException("Unable to call service `$service`, service not registered.");
+            else
+                return null;
+        }
         return $this->services[$service](...$args);
     }
 
