@@ -3,7 +3,7 @@ namespace ElfStack\SlimModule;
 
 use App\Modules\Auth\Meta;
 
-class Manager
+class ModuleManager
 {
     protected \Slim\App $app;
 
