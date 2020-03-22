@@ -12,6 +12,13 @@ abstract class ServiceProvider
     {
         $this->app = $app;
         $this->container = $app->getContainer();
+
+        $this->boot();
+    }
+
+    protected function boot()
+    {
+
     }
 
     /**
