@@ -7,6 +7,8 @@ class MetaInfo
     protected array $config;
     protected string $from;
 
+    protected string $group_prefix = '';
+
     static function create($key, array $config = [])
     {
         $meta = new self($key, $config);
@@ -47,57 +49,63 @@ class MetaInfo
         return $this;
     }
 
+    public function group(string $prefix, callable $fun): void
+    {
+        $last = $this->group_prefix;
+        $this->group_prefix = $prefix;
+
+        $fun($this);
+
+        $this->group_prefix = $last;
+    }
+
     public function service($name, $callback)
     {
         $this->config['services'][$name] = $callback;
         return $this;
     }
 
-    public function get($uri, $callback)
+    public function get(string $uri, $callback)
     {
-        $this->config['apis']["GET $uri"] = $callback;
-        return $this;
+        return $this->map(['GET'], $uri, $callback);
     }
 
-    public function post($uri, $callback)
+    public function post(string $uri, $callback)
     {
-        $this->config['apis']["POST $uri"] = $callback;
-        return $this;
+        return $this->map(['POST'], $uri, $callback);
     }
 
-    public function put($uri, $callback)
+    public function put(string $uri, $callback)
     {
-        $this->config['apis']["PUT $uri"] = $callback;
-        return $this;
+        return $this->map(['PUT'], $uri, $callback);
     }
 
-    public function patch($uri, $callback)
+    public function patch(string $uri, $callback)
     {
-        $this->config['apis']["PATCH $uri"] = $callback;
-        return $this;
+        return $this->map(['PATCH'], $uri, $callback);
     }
 
-    public function delete($uri, $callback)
+    public function delete(string $uri, $callback)
     {
-        $this->config['apis']["DELETE $uri"] = $callback;
-        return $this;
+        return $this->map(['DELETE'], $uri, $callback);
     }
 
-    public function options($uri, $callback)
+    public function options(string $uri, $callback)
     {
-        $this->config['apis']["OPTIONS $uri"] = $callback;
-        return $this;
+        return $this->map(['OPTIONS'], $uri, $callback);
     }
 
-    public function any($uri, $callback)
+    public function any(string $uri, $callback)
     {
-        $this->config['apis']["GET,POST,PATCH,PUT,DELETE,OPTIONS $uri"] = $callback;
-        return $this;
+        return $this->map(['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'], $uri, $callback);
     }
 
     public function map(array $methods, $uri, $callback)
     {
         $methodStr = implode(',', $methods);
+        if (!($this->group_prefix == '/' or $this->group_prefix == '')) {
+            $uri = rtrim($this->group_prefix, '/').'/'.ltrim($uri, '/');
+        }
         $this->config['apis']["$methodStr $uri"] = $callback;
         return $this;
     }
